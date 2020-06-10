@@ -44,6 +44,7 @@ public class HTMLParser {
     public static String parseContent(String url) throws IOException {
 
         final URLConnection URLStream = new URL(url).openConnection();
+        URLStream.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:63.0) Gecko/20100101 Firefox/63.0");
         InputStream inputStream = null;
         if (!URLStream.getContentType().matches(".*text\\/html.*")) {
             throw new IOException("error");
@@ -74,7 +75,7 @@ public class HTMLParser {
             StringBuilder sb = new StringBuilder();
 
             if (rawLink.matches("^/+.*")) {
-                sb.append("https://").append(rawLink);
+                sb.append(rawLink.replaceAll("^/+", "https://"));
             } else if (!rawLink.matches("^[^/]*https?:.*")) {
                 sb.append("https://").append(defaultHost).append("/").append(rawLink);
             } else {
@@ -85,6 +86,7 @@ public class HTMLParser {
 
             String scheme = uri.getScheme() != null ? uri.getScheme() : "https";
             String host = uri.getHost() != null ? uri.getHost() : defaultHost;
+//            String path = !uri.getPath().equals("") ? uri.getPath().replaceAll("([^/])$", "$1/") : "/";
             String path = !uri.getPath().equals("") ? uri.getPath() : "/";
             String port = uri.getPort() != -1 ? ":" + uri.getPort() : "";
 
