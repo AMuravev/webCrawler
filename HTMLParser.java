@@ -90,8 +90,8 @@ public class HTMLParser {
             String path = !uri.getPath().equals("") ? uri.getPath() : "/";
             String port = uri.getPort() != -1 ? ":" + uri.getPort() : "";
 
-            return "http://localhost:25555" + path;
-            //return scheme + "://" + host + port + path;
+//            return "http://localhost:25555" + path;
+            return scheme + "://" + host + port + path;
         } catch (URISyntaxException e) {
             return rawLink;
         }
