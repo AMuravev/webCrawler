@@ -29,7 +29,9 @@ public class ParserFactory {
 
     public boolean isRunning() {
         for (Thread worker : workers) {
-            return worker.getState() != Thread.State.WAITING;
+            if (worker.getState() != Thread.State.WAITING) {
+               return true;
+            }
         }
         return false;
     }
