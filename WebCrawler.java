@@ -103,6 +103,7 @@ public class WebCrawler extends JFrame {
 
         JLabel parsedLabel = new JLabel("0");
         parsedLabel.setBounds(X_SECOND_COL, 205, 220, DEFAULT_HEIGHT);
+        parsedLabel.setName("ParsedLabel");
         add(parsedLabel);
 
         //start row
@@ -120,6 +121,50 @@ public class WebCrawler extends JFrame {
         exportButton.setName("ExportButton");
         add(exportButton);
 
+        Counter labelCounter = new Counter() {
+            private int counter = 0;
+            private JLabel item = parsedLabel;
+
+            @Override
+            public void increment() {
+                item.setText(String.valueOf(counter++));
+            }
+        };
+
+        ParserFactory parserFactory = new ParserFactory(labelCounter);
+
+        runButton.addActionListener(e -> {
+            String url = urlTextField.getText();
+            String workers = workersTextField.getText();
+            String depth = depthTextField.getText();
+            String timeLimit = timeTextField.getText();
+
+            if (workers.matches("^\\d+$")) {
+                parserFactory.setWorkers(Integer.parseInt(workers));
+            }
+
+            if (depth.matches("^\\d+$")) {
+                parserFactory.setDepth(Integer.parseInt(depth));
+            }
+
+            if (timeLimit.matches("^\\d+$")) {
+                parserFactory.setTimeLimit(Integer.parseInt(timeLimit));
+            }
+
+            if (url != null && url.trim().length() > 0) {
+                parserFactory.parseURL(url);
+            }
+
+        });
+
+        exportButton.addActionListener(e -> {
+            String path = exportUrlTextField.getText();
+            List<String> dataRaw = parserFactory.getData();
+
+            if (path != null && path.trim().length() > 0) {
+                export(path, dataRaw);
+            }
+        });
 
 
 //
@@ -171,22 +216,6 @@ public class WebCrawler extends JFrame {
 //                }
 //            }
 //        });
-//
-//        buttonExport.addActionListener(e -> {
-//            String path = textExportField.getText();
-//            List<String> dataRaw = new ArrayList<>();
-//
-//            if (path != null && path.trim().length() > 0) {
-//
-//                for (int i = 0; i < table.getRowCount(); i++) {
-//                    dataRaw.add(table.getValueAt(i, 0).toString());
-//                    dataRaw.add(table.getValueAt(i, 1).toString());
-//                }
-//
-//                export(path, dataRaw);
-//            }
-//        });
-
     }
 
     private void export(String path, List<String> data) {
@@ -196,4 +225,9 @@ public class WebCrawler extends JFrame {
             e.printStackTrace();
         }
     }
+}
+
+@FunctionalInterface
+interface Counter {
+    void increment();
 }
