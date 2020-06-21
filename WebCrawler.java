@@ -152,7 +152,13 @@ public class WebCrawler extends JFrame {
             }
 
             if (url != null && url.trim().length() > 0) {
-                parserFactory.parseURL(url);
+                if (runButton.isSelected()) {
+                    runButton.setText("Stop");
+                    parserFactory.parseURL(url);
+                } else {
+                    runButton.setText("Run");
+                    parserFactory.stop();
+                }
             }
 
         });

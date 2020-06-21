@@ -39,4 +39,8 @@ public class QueueManager {
             notifyAll();
         }
     }
+
+    public synchronized void clearQueue() {
+        deque.clear();
+    }
 }

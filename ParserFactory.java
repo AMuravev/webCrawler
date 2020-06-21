@@ -66,7 +66,7 @@ public class ParserFactory {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                if (isRunning()) {
+                if (!isRunning()) {
                     stop();
                 }
             }
@@ -89,6 +89,8 @@ public class ParserFactory {
 
     public void stop() {
         ParserFactory.flag = false;
+        queueManager.clearQueue();
+        System.out.println("Work stopped");
     }
 
     public List<String> getData() {

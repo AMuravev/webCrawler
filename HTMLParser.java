@@ -46,7 +46,7 @@ public class HTMLParser {
         final URLConnection URLStream = new URL(url).openConnection();
         URLStream.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:63.0) Gecko/20100101 Firefox/63.0");
         InputStream inputStream = null;
-        if (!URLStream.getContentType().matches(".*text\\/html.*")) {
+        if (URLStream.getContentType() != null && !URLStream.getContentType().matches(".*text\\/html.*")) {
             throw new IOException("error");
         }
         inputStream = URLStream.getInputStream();
