@@ -1,14 +1,10 @@
 package crawler;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class WebCrawler extends JFrame {
-
-    private final String LINE_SEPARATOR = System.getProperty("line.separator");
 
     public WebCrawler() {
         super("Web Crawler");
@@ -133,7 +129,27 @@ public class WebCrawler extends JFrame {
             }
         };
 
-        ParserFactory parserFactory = new ParserFactory(labelCounter,clockLabel);
+        ParserFactory parserFactory = new ParserFactory(new ParserFactoryEventListener() {
+            @Override
+            public void eventStart() {
+                runButton.setText("Stop");
+                runButton.setSelected(true);
+                clockLabel.start();
+            }
+
+            @Override
+            public synchronized void eventIteration() {
+                labelCounter.increment();
+            }
+
+            @Override
+            public void eventStop() {
+                clockLabel.stop();
+                runButton.setText("Run");
+                runButton.setSelected(false);
+                System.out.println("Work stopped");
+            }
+        });
 
         runButton.addActionListener(e -> {
             String url = urlTextField.getText();
@@ -155,10 +171,8 @@ public class WebCrawler extends JFrame {
 
             if (url != null && url.trim().length() > 0) {
                 if (runButton.isSelected()) {
-                    runButton.setText("Stop");
-                    parserFactory.parseURL(url);
+                    parserFactory.start(url);
                 } else {
-                    runButton.setText("Run");
                     parserFactory.stop();
                 }
             }

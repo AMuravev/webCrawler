@@ -18,7 +18,6 @@ public class QueueManager {
     public synchronized Map.Entry<String, Integer> next() {
         while (deque.peekFirst() == null) {
             try {
-                System.out.println("waiting");
                 wait();
             } catch (InterruptedException ignored) {
             }
@@ -36,7 +35,6 @@ public class QueueManager {
             } else {
                 deque.addLast(el);
             }
-            System.out.println("wakeup");
             notifyAll();
         }
     }

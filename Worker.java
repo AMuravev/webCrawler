@@ -1,82 +1,49 @@
 package crawler;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class Worker extends Thread {
 
-    private QueueManager queueManager;
-    private PagesSummary pagesSummary;
-    private Counter pageCounter;
-    private ScheduledExecutorService executor;
+    private WorkerScheduleManager workerScheduleManager;
 
-    public Worker(QueueManager queueManager, PagesSummary pagesSummary, Counter counter) {
-        this.queueManager = queueManager;
-        this.pagesSummary = pagesSummary;
-        this.pageCounter = counter;
-        this.executor = Executors.newSingleThreadScheduledExecutor();
+    public Worker(WorkerScheduleManager workerScheduleManager) {
+        this.workerScheduleManager = workerScheduleManager;
     }
 
     @Override
     public void run() {
-
-        executor = Executors.newSingleThreadScheduledExecutor();
-        executor.scheduleAtFixedRate(this::nextSchedule, 0, 500, TimeUnit.MICROSECONDS);
-
-//        final Runnable beeper = new Runnable() {
-//            public void run() {
-//                if (!ParserFactory.flag) {
-//                    executor.shutdown();
-//                }
-//            }
-//        };
-
-//        while (!ParserFactory.flag) {
-//            System.out.println("Execute");
-//            executor.shutdownNow();
-//        }
+        nextSchedule();
     }
 
     private void nextSchedule() {
-        System.out.println(this.getName());
         try {
             while (ParserFactory.flag) {
-                parseURL(queueManager.next());
+                next(workerScheduleManager.nextTask());
             }
-            System.out.println("Shutdown " + this.getName());
-            executor.shutdownNow();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void parseURL(Map.Entry<String, Integer> el) {
+    private void next(Map.Entry<String, Integer> el) {
 
         try {
-            String url = el.getKey();
-            int deep = el.getValue() + 1;
+            workerScheduleManager.work(el);
 
-            String defaultHost = HTMLParser.parseHost(url);
-            String modifyURL = HTMLParser.parseURL(url, defaultHost);
-
-            String content = HTMLParser.parseContent(modifyURL);
-            String title = HTMLParser.parseTitle(content);
-
-            pagesSummary.put(List.of(modifyURL, title));
-            pageCounter.increment();
-
-            List<String> links = HTMLParser.getLinks(content);
-
-            for (String link : links) {
-                queueManager.put(Map.entry(link, deep));
-            }
+            workerScheduleManager.taskComplete();
 
         } catch (IOException e) {
-            System.out.println("Cant resolve url: " + el.getKey());
+            System.out.println("Cant resolve task: " + el.getKey());
         }
     }
+}
+
+interface WorkerScheduleManager {
+
+    Map.Entry<String, Integer> nextTask();
+
+    void work(Map.Entry<String, Integer> task) throws IOException;
+
+    void taskComplete();
 }
