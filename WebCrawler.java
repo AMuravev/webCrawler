@@ -133,7 +133,7 @@ public class WebCrawler extends JFrame {
             }
         };
 
-        ParserFactory parserFactory = new ParserFactory(labelCounter);
+        ParserFactory parserFactory = new ParserFactory(labelCounter,clockLabel);
 
         runButton.addActionListener(e -> {
             String url = urlTextField.getText();
@@ -156,7 +156,6 @@ public class WebCrawler extends JFrame {
             if (url != null && url.trim().length() > 0) {
                 if (runButton.isSelected()) {
                     runButton.setText("Stop");
-                    clockLabel.start();
                     parserFactory.parseURL(url);
                 } else {
                     runButton.setText("Run");

@@ -12,30 +12,43 @@ public class Worker extends Thread {
     private QueueManager queueManager;
     private PagesSummary pagesSummary;
     private Counter pageCounter;
+    private ScheduledExecutorService executor;
 
     public Worker(QueueManager queueManager, PagesSummary pagesSummary, Counter counter) {
         this.queueManager = queueManager;
         this.pagesSummary = pagesSummary;
         this.pageCounter = counter;
+        this.executor = Executors.newSingleThreadScheduledExecutor();
     }
 
     @Override
     public void run() {
 
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        executor = Executors.newSingleThreadScheduledExecutor();
         executor.scheduleAtFixedRate(this::nextSchedule, 0, 500, TimeUnit.MICROSECONDS);
 
-        while (!ParserFactory.flag) {
-            executor.shutdownNow();
-        }
+//        final Runnable beeper = new Runnable() {
+//            public void run() {
+//                if (!ParserFactory.flag) {
+//                    executor.shutdown();
+//                }
+//            }
+//        };
+
+//        while (!ParserFactory.flag) {
+//            System.out.println("Execute");
+//            executor.shutdownNow();
+//        }
     }
 
     private void nextSchedule() {
-        Map.Entry<String, Integer> next;
+        System.out.println(this.getName());
         try {
-            while ((next = queueManager.next()) != null) {
-                parseURL(next);
+            while (ParserFactory.flag) {
+                parseURL(queueManager.next());
             }
+            System.out.println("Shutdown " + this.getName());
+            executor.shutdownNow();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -63,7 +76,7 @@ public class Worker extends Thread {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Cant resolve url: " + el.getKey());
         }
     }
 }

@@ -13,8 +13,10 @@ public class ParserFactory {
     private PagesSummary pagesSummary;
     private int timeLimit;
     private Counter pageCounter;
+    private ClockLabel clockLabel;
 
-    ParserFactory(Counter counter) {
+    ParserFactory(Counter counter, ClockLabel clockLabel) {
+        this.clockLabel = clockLabel;
         this.queueManager = new QueueManager();
         this.pagesSummary = new PagesSummary();
         this.pageCounter = counter;
@@ -80,6 +82,8 @@ public class ParserFactory {
             worker.start();
         }
 
+        clockLabel.start();
+
         for (Thread worker : workers) {
             try {
                 worker.join();
@@ -92,6 +96,7 @@ public class ParserFactory {
     public void stop() {
         ParserFactory.flag = false;
         queueManager.clearQueue();
+        clockLabel.stop();
         System.out.println("Work stopped");
     }
 
