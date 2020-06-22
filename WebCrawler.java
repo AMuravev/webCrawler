@@ -94,7 +94,9 @@ public class WebCrawler extends JFrame {
         timeElapsedLabel.setBounds(X_FIRST_COL, 165, DEFAULT_LABEL_WIDTH, DEFAULT_HEIGHT);
         add(timeElapsedLabel);
 
-        // add timer
+        ClockLabel clockLabel = new ClockLabel();
+        clockLabel.setBounds(X_SECOND_COL, 165, DEFAULT_LABEL_WIDTH, DEFAULT_HEIGHT);
+        add(clockLabel);
 
         //start row
         JLabel pageLabel = new JLabel("Parsed pages:");
@@ -143,17 +145,18 @@ public class WebCrawler extends JFrame {
                 parserFactory.setWorkers(Integer.parseInt(workers));
             }
 
-            if (depth.matches("^\\d+$")) {
+            if (depthCheckBox.isSelected() && depth.matches("^\\d+$")) {
                 parserFactory.setDepth(Integer.parseInt(depth));
             }
 
-            if (timeLimit.matches("^\\d+$")) {
+            if (timeCheckBox.isSelected() && timeLimit.matches("^\\d+$")) {
                 parserFactory.setTimeLimit(Integer.parseInt(timeLimit));
             }
 
             if (url != null && url.trim().length() > 0) {
                 if (runButton.isSelected()) {
                     runButton.setText("Stop");
+                    clockLabel.start();
                     parserFactory.parseURL(url);
                 } else {
                     runButton.setText("Run");
