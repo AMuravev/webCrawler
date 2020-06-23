@@ -48,6 +48,7 @@ public class ParserFactory {
 
         for (int i = 0; i < workers.length; i++) {
             workers[i] = new Worker(new WorkerScheduleManager() {
+
                 @Override
                 public Map.Entry<String, Integer> nextTask() throws AllTasksCompeteException {
                     Map.Entry<String, Integer> next;
@@ -68,7 +69,9 @@ public class ParserFactory {
                     String content = HTMLParser.parseContent(modifyURL);
                     String title = HTMLParser.parseTitle(content);
 
-                    pagesSummary.put(List.of(modifyURL, title));
+                    if (pagesSummary.put(List.of(modifyURL, title))) {
+                        parserFactoryEventListener.eventIteration();
+                    }
 
                     List<String> links = HTMLParser.getLinks(content);
 
@@ -79,7 +82,7 @@ public class ParserFactory {
 
                 @Override
                 public void taskComplete() {
-                    parserFactoryEventListener.eventIteration();
+
                 }
             });
         }
