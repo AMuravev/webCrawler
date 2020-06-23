@@ -8,7 +8,7 @@ public class ClockLabel extends JLabel {
 
     private Timer timer;
     private LocalDateTime startTime;
-    private Duration duration = Duration.ofMinutes(0);
+    private final Duration duration = Duration.ofMinutes(0);
 
     public ClockLabel() {
         super(String.format("%02dh %02dm %02ds", 0, 0, 0));

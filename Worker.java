@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class Worker extends Thread {
 
-    private WorkerScheduleManager workerScheduleManager;
+    private final WorkerScheduleManager workerScheduleManager;
 
     public Worker(WorkerScheduleManager workerScheduleManager) {
         this.workerScheduleManager = workerScheduleManager;
