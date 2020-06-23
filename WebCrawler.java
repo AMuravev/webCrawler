@@ -65,6 +65,7 @@ public class WebCrawler extends JFrame {
 
         JCheckBox depthCheckBox = new JCheckBox("Enabled");
         depthCheckBox.setBounds(X_THIRD_COL, 85, 100, DEFAULT_HEIGHT);
+        depthCheckBox.setSelected(true);
         depthCheckBox.setName("DepthCheckBox");
         add(depthCheckBox);
 
@@ -125,7 +126,13 @@ public class WebCrawler extends JFrame {
 
             @Override
             public void increment() {
-                item.setText(String.valueOf(counter++));
+                item.setText(String.valueOf(++counter));
+            }
+
+            @Override
+            public void reset() {
+                counter = 0;
+                item.setText(String.valueOf(0));
             }
         };
 
@@ -135,6 +142,7 @@ public class WebCrawler extends JFrame {
                 runButton.setText("Stop");
                 runButton.setSelected(true);
                 clockLabel.start();
+                labelCounter.reset();
             }
 
             @Override
@@ -147,7 +155,7 @@ public class WebCrawler extends JFrame {
                 clockLabel.stop();
                 runButton.setText("Run");
                 runButton.setSelected(false);
-                System.out.println("Work stopped");
+//                System.out.println("Work stopped");
             }
         });
 
@@ -157,24 +165,26 @@ public class WebCrawler extends JFrame {
             String depth = depthTextField.getText();
             String timeLimit = timeTextField.getText();
 
-            if (workers.matches("^\\d+$")) {
-                parserFactory.setWorkers(Integer.parseInt(workers));
-            }
+            if (runButton.isSelected()) {
 
-            if (depthCheckBox.isSelected() && depth.matches("^\\d+$")) {
-                parserFactory.setDepth(Integer.parseInt(depth));
-            }
-
-            if (timeCheckBox.isSelected() && timeLimit.matches("^\\d+$")) {
-                parserFactory.setTimeLimit(Integer.parseInt(timeLimit));
-            }
-
-            if (url != null && url.trim().length() > 0) {
-                if (runButton.isSelected()) {
-                    parserFactory.start(url);
-                } else {
-                    parserFactory.stop();
+                if (workers.matches("^\\d+$")) {
+                    parserFactory.setWorkersCount(Integer.parseInt(workers));
                 }
+
+                if (depthCheckBox.isSelected() && depth.matches("^\\d+$")) {
+                    parserFactory.setDepth(Integer.parseInt(depth));
+                }
+
+                if (timeCheckBox.isSelected() && timeLimit.matches("^\\d+$")) {
+                    parserFactory.setTimeLimit(Integer.parseInt(timeLimit));
+                }
+
+                if (url != null && url.trim().length() > 0) {
+                    parserFactory.start(url);
+                }
+
+            } else {
+                parserFactory.stop();
             }
 
         });
@@ -183,7 +193,7 @@ public class WebCrawler extends JFrame {
             String path = exportUrlTextField.getText();
             List<String> dataRaw = parserFactory.getData();
 
-            if (path != null && path.trim().length() > 0) {
+            if (!parserFactory.isRunning() && path != null && path.trim().length() > 0) {
                 export(path, dataRaw);
             }
         });
@@ -198,7 +208,7 @@ public class WebCrawler extends JFrame {
     }
 }
 
-@FunctionalInterface
 interface Counter {
     void increment();
+    void reset();
 }

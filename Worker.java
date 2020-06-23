@@ -21,7 +21,11 @@ public class Worker extends Thread {
             while (ParserFactory.flag) {
                 next(workerScheduleManager.nextTask());
             }
-        } catch (Exception e) {
+        }
+        catch (AllTasksCompeteException ignored) {
+//            System.out.println(this.getName() + " is finished.");
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -34,16 +38,23 @@ public class Worker extends Thread {
             workerScheduleManager.taskComplete();
 
         } catch (IOException e) {
-            System.out.println("Cant resolve task: " + el.getKey());
+//            System.out.println("Cant resolve task: " + el.getKey());
         }
     }
 }
 
 interface WorkerScheduleManager {
 
-    Map.Entry<String, Integer> nextTask();
+    Map.Entry<String, Integer> nextTask() throws AllTasksCompeteException;
 
     void work(Map.Entry<String, Integer> task) throws IOException;
 
     void taskComplete();
+}
+
+class AllTasksCompeteException extends Exception {
+
+    AllTasksCompeteException(String message) {
+        super(message);
+    }
 }

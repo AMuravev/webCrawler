@@ -1,58 +1,60 @@
 package crawler;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 public class ParserFactory {
 
     public static volatile boolean flag = true;
-    Thread[] workers = new Worker[1];
-    private QueueManager queueManager;
-    private PagesSummary pagesSummary;
+    private final ParserFactoryEventListener parserFactoryEventListener;
+    private Thread[] workers = new Worker[1];
+    private QueueManager queueManager = null;
+    private PagesSummary pagesSummary = null;
     private int timeLimit;
-    private ParserFactoryEventListener parserFactoryEventListener;
+    private int maxDepth;
 
     ParserFactory(ParserFactoryEventListener parserFactoryEventListener) {
         this.parserFactoryEventListener = parserFactoryEventListener;
-        this.queueManager = new QueueManager();
-        this.pagesSummary = new PagesSummary();
     }
 
     public void start(String url) {
         ParserFactory.flag = true;
+        initializeEnvironment();
         queueManager.put(Map.entry(url, 0));
-        start();
+        initializeWorkers();
+        startWorkers();
         checkTimeLimit();
         setWorkersShutdownScheduled();
     }
 
-    public boolean isRunning() {
-        for (Thread worker : workers) {
-            if (worker.getState() != Thread.State.WAITING && ParserFactory.flag) {
-                return true;
-            }
+    public void stop() {
+        if (ParserFactory.flag) {
+            ParserFactory.flag = false;
+            queueManager.clearQueue();
+            stopWorkers();
+            parserFactoryEventListener.eventStop();
         }
-        return false;
     }
 
-    public void setTimeLimit(int time) {
-        timeLimit = time;
+    public void initializeEnvironment() {
+        queueManager = new QueueManager();
+        if (maxDepth != 0) {
+            queueManager.setDepth(maxDepth);
+        }
+        pagesSummary = new PagesSummary();
     }
 
-    public void setDepth(int depth) {
-        queueManager.setDepth(depth);
-    }
+    public void initializeWorkers() {
 
-    public void setWorkers(int count) {
-        workers = new Worker[Math.max(1, count)];
         for (int i = 0; i < workers.length; i++) {
             workers[i] = new Worker(new WorkerScheduleManager() {
                 @Override
-                public Map.Entry<String, Integer> nextTask() {
-                    return queueManager.next();
+                public Map.Entry<String, Integer> nextTask() throws AllTasksCompeteException {
+                    Map.Entry<String, Integer> next;
+                    if ((next = queueManager.next()) == null) {
+                        throw new AllTasksCompeteException("All task complete");
+                    }
+                    return next;
                 }
 
                 @Override
@@ -83,6 +85,15 @@ public class ParserFactory {
         }
     }
 
+    public synchronized boolean isRunning() {
+        for (Thread worker : workers) {
+            if (worker.getState() != Thread.State.WAITING && ParserFactory.flag) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void checkTimeLimit() {
         if (timeLimit != 0) {
             Timer timer = new Timer();
@@ -93,6 +104,35 @@ public class ParserFactory {
                 }
             }, timeLimit * 1000);
         }
+    }
+
+    public void startWorkers() {
+        for (Thread worker : workers) {
+            worker.start();
+        }
+        parserFactoryEventListener.eventStart();
+    }
+
+    public void stopWorkers() {
+        for (Thread worker : workers) {
+            try {
+                worker.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void setTimeLimit(int time) {
+        timeLimit = time;
+    }
+
+    public void setDepth(int depth) {
+        maxDepth = depth;
+    }
+
+    public void setWorkersCount(int count) {
+        workers = new Worker[Math.max(1, count)];
     }
 
     public void setWorkersShutdownScheduled() {
@@ -106,21 +146,6 @@ public class ParserFactory {
                 }
             }
         }, 1000, 1000);
-    }
-
-    public void start() {
-        for (Thread worker : workers) {
-            worker.start();
-        }
-        parserFactoryEventListener.eventStart();
-    }
-
-    public void stop() {
-        if (ParserFactory.flag) {
-            ParserFactory.flag = false;
-            queueManager.clearQueue();
-            parserFactoryEventListener.eventStop();
-        }
     }
 
     public List<String> getData() {

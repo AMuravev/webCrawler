@@ -16,7 +16,7 @@ public class QueueManager {
     }
 
     public synchronized Map.Entry<String, Integer> next() {
-        while (deque.peekFirst() == null) {
+        while (deque.peekFirst() == null && ParserFactory.flag) {
             try {
                 wait();
             } catch (InterruptedException ignored) {
@@ -41,5 +41,7 @@ public class QueueManager {
 
     public synchronized void clearQueue() {
         deque.clear();
+        tempURLs.clear();
+        notifyAll();
     }
 }
